@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Tasks</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+  <script type="text/babel">
+
+    class App extends React.Component {
+    constructor(props) {
+      super(props)
+      this.state = { tasks: [] }
+      this.getTasks = this.getTasks.bind(this)
+    }
+
+    componentDidMount() {
+      this.getTasks()
+    }
+
+    getTasks() {
+      return axios.get('/tasks')
+             .then(({data}) => {
+               this.setState({tasks: data})
+             })
+             .catch(err => console.log(err))
+    }
+
+    render() {
+      return (
+        <div>
+          <TaskForm onSubmit={this.getTasks}/>
+          <ul>
+            {this.state.tasks.map(task => {
+              return (
+                <li
+                  key={task.id}
+                  style={{
+                    color: task.completed ? 'blue' : 'red'
+                  }}
+                >{task.content}</li>
+              )
+            })}
+          </ul>
+        </div>
+      )
+    }
+  }
+
+  class TaskForm extends React.Component {
+    constructor(props) {
+      super(props)
+      this.state = { text: '' }
+      this.handleChange = this.handleChange.bind(this)
+      this.handleSubmit = this.handleSubmit.bind(this)
+    }
+
+    handleChange(event) {
+      this.setState({
+        text: event.target.value
+      })
+    }
+
+    handleSubmit(event) {
+      event.preventDefault()
+      axios.post('/tasks', {description: this.state.text})
+      .then(() => this.props.onSubmit())
+      .then(() => this.setState({text: ''}))
+      .catch(err => console.log(err))
+    }
+
+    render() {
+      return (
+        <form onSubmit={this.handleSubmit}>
+          <input
+            type="text"
+            value={this.state.text}
+            onChange={this.handleChange}
+          />
+        </form>
+      )
+    }
+  }
+
+  ReactDOM.render(<App/>, document.getElementById('root'))
+
+  </script>
+</body>
+
+</html>
